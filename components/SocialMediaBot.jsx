@@ -7,6 +7,7 @@ import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import { CSVLink } from "react-csv";
 import { AzureOpenAI } from "openai";
+import { CircularProgress } from "@mui/material";
 
 const SocialMedia = () => {
   const [messCont, setMessCont] = useState([
@@ -94,12 +95,48 @@ const SocialMedia = () => {
         </div>
       );
     } else {
-      const parts = text.split(/(\*\*.*?\*\*)/);
+      const parts = text.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/);
       return parts.map((part, i) => {
         if (part.startsWith("**") && part.endsWith("**")) {
           return <strong key={i}>{part.slice(2, -2)}</strong>;
         } else if (/^\s*-/.test(part)) {
           return <span key={i}>{"\u00A0\u00A0\u00A0\u00A0" + part}</span>;
+        } else if (/\[.*?\]\(.*?\)/.test(part)) {
+          const linkText = part.match(/\[(.*?)\]/)?.[1]; // Get the text inside square brackets
+          const url = part.match(/\((.*?)\)/)?.[1]; // Get the URL inside round brackets
+
+          return (
+            <a
+              key={i}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-primary"
+            >
+              {linkText}
+            </a>
+          );
+        } else if (part.includes("https://")) {
+          // Split the part by spaces to isolate potential URLs
+          const subParts = part.split(/\s+/);
+
+          return subParts.map((subPart, j) => {
+            if (subPart.startsWith("https://")) {
+              return (
+                <a
+                  key={`${i}-${j}`}
+                  href={subPart}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-primary"
+                >
+                  {subPart}
+                </a>
+              );
+            }
+            // Return other text normally
+            return subPart + " ";
+          });
         }
         return part;
       });
@@ -214,9 +251,11 @@ const SocialMedia = () => {
 
   const handleDownload = async (data) => {
     setDownloadProgress(true);
-    const response = await handleOpenAI(data);
-    const formattedResponse = JSON.parse(response);
-    setFormattedJsonData(formattedResponse);
+    try {
+      const response = await handleOpenAI(data);
+      const formattedResponse = JSON.parse(response);
+      setFormattedJsonData(formattedResponse);
+    } catch {}
     setDownloadProgress(false);
   };
 
@@ -278,7 +317,9 @@ const SocialMedia = () => {
                     mess.sql_answer !== "" &&
                     mess.message !== "Error! Please try again" && (
                       <div className="flex justify-end mr-2 cursor-pointer">
-                        {!downloadProgress && (
+                        {downloadProgress ? (
+                          <CircularProgress size={20} />
+                        ) : (
                           <CloudDownloadIcon
                             fontSize="small"
                             onClick={() => handleDownload(mess.sql_answer)}
