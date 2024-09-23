@@ -274,16 +274,18 @@ const SocialMedia = () => {
                         : formatTextWithBold(mess.message)}
                     </div>
                   </div>
-                  {mess.sql_answer !== 0 && mess.sql_answer !== "" && (
-                    <div className="flex justify-end mr-2 cursor-pointer">
-                      {!downloadProgress && (
-                        <CloudDownloadIcon
-                          fontSize="small"
-                          onClick={() => handleDownload(mess.sql_answer)}
-                        />
-                      )}
-                    </div>
-                  )}
+                  {mess.sql_answer !== 0 &&
+                    mess.sql_answer !== "" &&
+                    mess.message !== "Error! Please try again" && (
+                      <div className="flex justify-end mr-2 cursor-pointer">
+                        {!downloadProgress && (
+                          <CloudDownloadIcon
+                            fontSize="small"
+                            onClick={() => handleDownload(mess.sql_answer)}
+                          />
+                        )}
+                      </div>
+                    )}
                 </div>
               )}
 
