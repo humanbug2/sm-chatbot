@@ -1,17 +1,24 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
-  theme: {
-    extend: {
-      colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-      },
+export const content = [
+  "./pages/**/*.{js,ts,jsx,tsx}",
+  "./components/**/*.{js,ts,jsx,tsx}",
+];
+export const theme = {
+  screens: {
+    xs: "601px",
+    sm: "800px",
+    md: "1025px",
+    lg: "1441px",
+    xl: "1601px",
+  },
+  extend: {
+    backgroundImage: {
+      "text-gradient":
+        "linear-gradient(to bottom, #001E96 10%, #005CD9 80%, #008CE3 100%)",
+    },
+    fontFamily: {
+      inter: ["Montserrat", "sans-serif"],
     },
   },
-  plugins: [],
 };
+export const plugins = [];
