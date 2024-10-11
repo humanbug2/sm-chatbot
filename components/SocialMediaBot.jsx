@@ -8,6 +8,7 @@ import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import { CSVLink } from "react-csv";
 import { AzureOpenAI } from "openai";
 import { CircularProgress } from "@mui/material";
+import { handleFeature } from "./Sidebar";
 
 const SocialMedia = () => {
   const [messCont, setMessCont] = useState([
@@ -318,14 +319,15 @@ console.log(response,"response");
                     mess.sql_answer !== "" &&
                     mess.message !== "Error! Please try again" && (
                       <div className="flex justify-end mr-2 cursor-pointer">
-                        {/* {downloadProgress ? (
+                        {downloadProgress ? (
                           <CircularProgress size={20} />
                         ) : (
                           <CloudDownloadIcon
                             fontSize="small"
-                            onClick={() => handleDownload(mess.sql_answer)}
+                            // onClick={() => handleDownload(mess.sql_answer)}
+                            onClick={()=>handleFeature()}
                           />
-                        )} */}
+                        )}
                       </div>
                     )}
                 </div>

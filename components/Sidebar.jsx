@@ -2,12 +2,12 @@ import React from "react";
 import { imgPath } from "../utils/utils";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+export const handleFeature = () => {
+  toast.info("This feature is not available as of now.");
+};
 
 const Sidebar = () => {
-  const handleFeature = () => {
-    toast.info("This feature is not available as of now.");
-  };
-
+  
   return (
     <div className="w-64 h-screen bg-white flex flex-col gap-5 py-7 px-5 border-r border-[#E0E0E0]">
       <div className="flex flex-col justify-center gap-5">
