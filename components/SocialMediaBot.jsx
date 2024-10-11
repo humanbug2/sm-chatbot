@@ -209,6 +209,36 @@ console.log(response,"response");
       setLoading(false);
     }
   };
+  const handleClearChat = async () => {
+ 
+   window.location.reload();
+   
+    const headers = {
+      accept: "application/json",
+      "Content-Type": "application/json",
+    };
+console.log((process.env.NEXT_URL_TO_TEST_CLEAR_CHAT,"process.env.NEXT_URL_TO_TEST_CLEAR_CHAT"));
+
+    try {
+      const response = await axios.post(
+        process.env.NEXT_URL_TO_TEST_CLEAR_CHAT || 'http://3.133.108.131:9002/clear_chat/',
+      {},
+        headers
+      );
+console.log(response,"response");
+
+     
+    } catch (error) {
+      // Handle errors
+    console.log("error",error);
+    
+      alert(error.response?.data?.detail || "An error occurred");
+    } finally {
+      // Reset loading state
+    
+    }
+  };
+
 
   const endpoint = process.env.NEXT_PUBLIC_AZURE_OPENAI_ENDPOINT;
   const apiKey = process.env.NEXT_PUBLIC_AZURE_OPENAI_API_KEY;
@@ -267,10 +297,11 @@ console.log(response,"response");
         <Sidebar />
       </div>
       <div className="flex flex-col" style={{ width: "calc(100% - 16rem)" }}>
-        <div className="flex flex-row items-center gap-5 justify-start  my-4 ml-8">
+        <div className="flex flex-row items-center gap-5 justify-between  my-4 ml-8">
           <div className="text-lg text-[#001E96] font-inter font-normal">
             Social Media Insights
           </div>
+          <button className="mr-8 bg-[#008CE3] rounded-sm px-2 py-1 text-white" onClick={()=>handleClearChat()}>Clear Conversation</button>
         </div>
 
         <div
