@@ -169,12 +169,12 @@ const SocialMedia = () => {
     setUserInput("");
     setLoading(true);
     const body = {
-      query: {
+      // query: {
         question: userInput,
-      },
-      user_agent: {
-        username: " ",
-      },
+      // },
+      // user_agent: {
+      //   username: " ",
+      // },
     };
     const headers = {
       accept: "application/json",
@@ -187,8 +187,9 @@ const SocialMedia = () => {
         body,
         headers
       );
+console.log(response,"response");
 
-      const keyPoints = response.data.answer.split("\n");
+      const keyPoints = response.data.response.split("\n");
       const parsedSqlResponse = response.data.sql_answer;
 
       setMessCont((prevState) => [
@@ -272,7 +273,7 @@ const SocialMedia = () => {
         </div>
 
         <div
-          className="flex-1 p-4 bg-gray-100 min-h-[85vh] max-h-[85vh] mx-8 overflow-y-scroll scroll-m-4 scroll-bar rounded"
+          className="flex-1 p-4 bg-gray-100 min-h-[83vh] max-h-[83vh] xl:min-h-[85vh] xl:max-h-[85vh] mx-8 overflow-y-scroll scroll-m-4 scroll-bar rounded"
           ref={chatContainerRef}
         >
           {messCont.map((mess, index) => (
@@ -317,14 +318,14 @@ const SocialMedia = () => {
                     mess.sql_answer !== "" &&
                     mess.message !== "Error! Please try again" && (
                       <div className="flex justify-end mr-2 cursor-pointer">
-                        {downloadProgress ? (
+                        {/* {downloadProgress ? (
                           <CircularProgress size={20} />
                         ) : (
                           <CloudDownloadIcon
                             fontSize="small"
                             onClick={() => handleDownload(mess.sql_answer)}
                           />
-                        )}
+                        )} */}
                       </div>
                     )}
                 </div>
