@@ -5,14 +5,15 @@ import axios from "axios";
 import Sidebar from "./Sidebar";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
-import { CSVLink } from "react-csv";
+import { CSVLink, CSVDownload} from "react-csv";
 import { AzureOpenAI } from "openai";
 import { CircularProgress } from "@mui/material";
-import { handleFeature } from "./Sidebar";
+import { toast } from 'react-toastify';
+// import { handleFeature } from "./Sidebar";
 
 const SocialMedia = () => {
   const [messCont, setMessCont] = useState([
-    { user: "bot", message: "Hello! How can I help you?", sql_answer: "" },
+    { user: "bot", message: "Hello! How can I help you?", sql_answer: "" ,question:""},
   ]);
 
   const [loading, setLoading] = useState(false);
@@ -39,10 +40,10 @@ const SocialMedia = () => {
   }, []);
 
   useEffect(() => {
-    if (firstUpdate.current) {
-      firstUpdate.current = false;
-      return;
-    }
+    // if (firstUpdate.current) {
+    //   firstUpdate.current = false;
+    //   return;
+    // }
     if (formattedJsonData !== "") {
       csvLink.current?.link?.click();
       setFormattedJsonData("");
@@ -164,7 +165,7 @@ const SocialMedia = () => {
 
     setMessCont((prevState) => [
       ...prevState,
-      { user: "user", message: userInput, sql_answer: "" },
+      { user: "user", message: userInput, sql_answer: "", question: userInput },
     ]);
 
     setUserInput("");
@@ -191,11 +192,17 @@ const SocialMedia = () => {
 console.log(response,"response");
 
       const keyPoints = response.data.response.split("\n");
-      const parsedSqlResponse = response.data.sql_answer;
+      const parsedSqlResponse = response.data.data_for_graph;
+      const question= response.data.question;
 
       setMessCont((prevState) => [
         ...prevState,
-        { user: "bot", message: keyPoints, sql_answer: parsedSqlResponse },
+        {
+          user: "bot",
+          message: keyPoints,
+          question: question,
+          ...(parsedSqlResponse && { sql_answer: parsedSqlResponse }) // Only add sql_answer if parsedSqlResponse is not null
+        }
       ]);
     } catch (error) {
       // Handle errors
@@ -245,7 +252,9 @@ console.log(response,"response");
   const apiVersion = process.env.NEXT_PUBLIC_API_VERSION;
   const deployment = process.env.NEXT_PUBLIC_DEPLOYMENT;
 
-  const handleOpenAI = async (data) => {
+  const handleOpenAI = async (data,question) => {
+    console.log("data:",data)
+    console.log("Question",question)
     const client = new AzureOpenAI({
       endpoint,
       apiKey,
@@ -253,20 +262,21 @@ console.log(response,"response");
       deployment,
       dangerouslyAllowBrowser: true,
     });
+    console.log(client)
+    console.log("chat creating")
 
     const result = await client.chat.completions.create({
       messages: [
         {
           role: "system",
           content:
-            "You are an AI assistant, I will give you data which you need to convert into a valid json. Here is how a valid json looks like: [{'key-1': 'value-1','key-2': 'value-2'},{'key-1': 'value-1','key-2': 'value-2'}]. Remove all the unicode characters.",
+            "You are an AI assistant. I will provide you with a question and some data, which you need to convert into a valid JSON format. Include headers based on the data content. The JSON should look like: {{'header1': 'value1', 'header2': 'value2'}, ...}. Remove any Unicode characters if they appear.",
         },
-
-        { role: "user", content: data },
+        { role: "user", content: `Question: ${question}` },
+        { role: "user", content: `Data: ${data}` },
       ],
-      //past_messages: 10,
       max_tokens: 4096,
-      temperature: 0.05,
+      temperature: 0,
       top_p: 0.95,
       frequency_penalty: 0,
       presence_penalty: 0,
@@ -274,20 +284,32 @@ console.log(response,"response");
     });
 
     let answer = "";
-
+   
+    print("returnin answer")
     for (const choice of result.choices) {
       answer = choice.message.content;
     }
+    console.log("answer",answer)
     return answer;
   };
 
-  const handleDownload = async (data) => {
+  const handleDownload = async (data, question) => {
+    if (data === undefined) {
+      toast.info("Data not available");
+      return;
+    }
     setDownloadProgress(true);
     try {
-      const response = await handleOpenAI(data);
+      console.log("data", data);
+      const response = await handleOpenAI(data, question);
+      console.log("Processing");
       const formattedResponse = JSON.parse(response);
+      console.log("Formatted response", formattedResponse);
+  
       setFormattedJsonData(formattedResponse);
-    } catch {}
+    } catch (error) {
+      console.log("Error occurred", error);
+    }
     setDownloadProgress(false);
   };
 
@@ -355,8 +377,7 @@ console.log(response,"response");
                         ) : (
                           <CloudDownloadIcon
                             fontSize="small"
-                            // onClick={() => handleDownload(mess.sql_answer)}
-                            onClick={()=>handleFeature()}
+                            onClick={() => handleDownload(mess.sql_answer,mess.question)}
                           />
                         )}
                       </div>
@@ -409,7 +430,7 @@ console.log(response,"response");
         filename="exportedChat.csv"
         className="hidden"
         ref={csvLink}
-        target="_blank"
+        target="_self"
       />
     </div>
   );
