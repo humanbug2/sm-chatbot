@@ -144,6 +144,18 @@ const SocialMedia = () => {
       });
     }
   };
+  const detectUrlOrNumber = (mess) => {
+    // Check if the message is a valid URL
+    const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
+    // Check if the message is a number (integer or decimal)
+    const numberRegex = /^[-+]?\d+(\.\d+)?$/;
+  
+    if (urlRegex.test(mess)) {
+      return true;
+    } 
+    else return false;
+  };
+
 
   const formatTextWithBold = (text) => {
     const parts = text.split(/(\*\*.*?\*\*)/);
@@ -368,9 +380,18 @@ console.log(response,"response");
                         : formatTextWithBold(mess.message)}
                     </div>
                   </div>
+                  {mess.sql_answer && detectUrlOrNumber(mess.sql_answer) && (
+      <div className="flex justify-center mt-2">
+        <img
+          src={mess.sql_answer}
+          alt="Graph"
+          className="max-w-[85vh] h-auto rounded-md"
+        />
+      </div>
+    )}
                   {mess.sql_answer !== 0 &&
                     mess.sql_answer !== "" &&
-                    mess.message !== "Error! Please try again" && (
+                    mess.message !== "Error! Please try again" && !detectUrlOrNumber(mess.sql_answer) && (
                       <div className="flex justify-end mr-2 cursor-pointer">
                         {downloadProgress ? (
                           <CircularProgress size={20} />
