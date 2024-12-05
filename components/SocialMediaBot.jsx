@@ -5,16 +5,22 @@ import axios from "axios";
 import Sidebar from "./Sidebar";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
-import { CSVLink, CSVDownload} from "react-csv";
+import { CSVLink } from "react-csv";
 import { AzureOpenAI } from "openai";
 import { CircularProgress } from "@mui/material";
-import { toast } from 'react-toastify';
-// import { handleFeature } from "./Sidebar";
+import { toast } from "react-toastify";
 
 const SocialMedia = () => {
   const [messCont, setMessCont] = useState([
-    { user: "bot", message: "Hello! How can I help you?", sql_answer: "" ,question:""},
+    {
+      user: "bot",
+      message: "Hello! How can I help you?",
+      sql_answer: "",
+      question: "",
+    },
   ]);
+
+  const socialMediaUrl = process.env.NEXT_PUBLIC_SOCIAL_MEDIA_INSIGHTS_URL;
 
   const [loading, setLoading] = useState(false);
   const [userInput, setUserInput] = useState("");
@@ -40,15 +46,33 @@ const SocialMedia = () => {
   }, []);
 
   useEffect(() => {
-    // if (firstUpdate.current) {
-    //   firstUpdate.current = false;
-    //   return;
-    // }
     if (formattedJsonData !== "") {
       csvLink.current?.link?.click();
       setFormattedJsonData("");
     }
   }, [formattedJsonData]);
+
+  const parseTextWithLinks = (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+
+    return parts.map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: "underline" }}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
 
   const formatTextWithBoldAndTable = (text) => {
     const isTable = text.includes("|");
@@ -62,8 +86,7 @@ const SocialMedia = () => {
             style={{
               borderCollapse: "collapse",
               tableLayout: "fixed",
-              width: "max-content",
-              minWidth: "100%",
+              width: "200px",
             }}
           >
             <tbody>
@@ -71,7 +94,7 @@ const SocialMedia = () => {
                 .filter((row) => !/^[-| ]+$/.test(row))
                 .map((row, rowIndex) => {
                   const columns = row
-                    .split("|")
+                    .split(/[\|\n]/)
                     .filter((col, i, arr) => i !== 0 && i !== arr.length - 1);
 
                   return (
@@ -82,11 +105,15 @@ const SocialMedia = () => {
                           style={{
                             border: "1px solid black",
                             padding: "8px",
-                            width: "150px",
+                            width: "200px",
                             textAlign: "left",
+                            wordWrap: "break-word",
+                            whiteSpace: "normal",
                           }}
                         >
-                          {col.trim()}
+                          {typeof col === "string"
+                            ? parseTextWithLinks(col)
+                            : col.trim()}
                         </td>
                       ))}
                     </tr>
@@ -98,69 +125,97 @@ const SocialMedia = () => {
       );
     } else {
       const parts = text.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/);
-      return parts.map((part, i) => {
-        if (part.startsWith("**") && part.endsWith("**")) {
-          return <strong key={i}>{part.slice(2, -2)}</strong>;
-        } else if (/^\s*-/.test(part)) {
-          return <span key={i}>{"\u00A0\u00A0\u00A0\u00A0" + part}</span>;
-        } else if (/\[.*?\]\(.*?\)/.test(part)) {
-          const linkText = part.match(/\[(.*?)\]/)?.[1]; // Get the text inside square brackets
-          const url = part.match(/\((.*?)\)/)?.[1]; // Get the URL inside round brackets
+      console.log(parts);
+      return parts
+        .filter((part) => part !== "!")
+        .map((part, i) => {
+          if (part.startsWith("### ")) {
+            return (
+              <span key={i} className="text-xl">
+                {part.slice(4)}
+              </span>
+            );
+          } else if (part.startsWith("#### ")) {
+            return (
+              <span key={i} className="text-lg">
+                {part.slice(5)}
+              </span>
+            );
+          } else if (part.startsWith("**") && part.endsWith("**")) {
+            return <strong key={i}>{part.slice(2, -2)}</strong>;
+          } else if (/^\s*-/.test(part)) {
+            return <span key={i}>{"\u00A0\u00A0\u00A0\u00A0" + part}</span>;
+          } else if (/\[.*?\]\(.*?\)/.test(part)) {
+            const linkText = part.match(/\[(.*?)\]/)?.[1]; // Get the text inside square brackets
+            const url = part.match(/\((.*?)\)/)?.[1]; // Get the URL inside round brackets
 
-          return (
-            <a
-              key={i}
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline text-primary"
-            >
-              {linkText}
-            </a>
-          );
-        } else if (part.includes("https://")) {
-          // Split the part by spaces to isolate potential URLs
-          const subParts = part.split(/\s+/);
-
-          return subParts.map((subPart, j) => {
-            if (subPart.startsWith("https://")) {
+            if (url.includes("https://procdna-auxo-datalake")) {
+              return (
+                <img key={i} src={url} alt={linkText || "Image"} className="" />
+              );
+            } else
               return (
                 <a
-                  key={`${i}-${j}`}
-                  href={subPart}
+                  key={i}
+                  href={url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline text-primary"
                 >
-                  {subPart}
+                  {linkText}
                 </a>
               );
-            }
-            // Return other text normally
-            return subPart + " ";
-          });
-        }
-        return part;
-      });
+          } else if (part.includes("https://")) {
+            // Split the part by spaces to isolate potential URLs
+            const subParts = part.split(/\s+/);
+
+            return subParts.map((subPart, j) => {
+              if (subPart.startsWith("https://")) {
+                return (
+                  <a
+                    key={`${i}-${j}`}
+                    href={subPart}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline text-primary"
+                  >
+                    {subPart}
+                  </a>
+                );
+              }
+              // Return other text normally
+              return subPart + " ";
+            });
+          }
+          return part;
+        });
     }
   };
   const detectUrlOrNumber = (mess) => {
     // Check if the message is a valid URL
     const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
-    // Check if the message is a number (integer or decimal)
-    const numberRegex = /^[-+]?\d+(\.\d+)?$/;
-  
+
     if (urlRegex.test(mess)) {
       return true;
-    } 
-    else return false;
+    } else return false;
   };
-
 
   const formatTextWithBold = (text) => {
     const parts = text.split(/(\*\*.*?\*\*)/);
     return parts.map((part, i) => {
-      if (part.startsWith("**") && part.endsWith("**")) {
+      if (part.startsWith("### ")) {
+        return (
+          <span key={i} className="text-xl">
+            {part.slice(4)}
+          </span>
+        );
+      } else if (part.startsWith("#### ")) {
+        return (
+          <span key={i} className="text-lg">
+            {part.slice(5)}
+          </span>
+        );
+      } else if (part.startsWith("**") && part.endsWith("**")) {
         return <strong key={i}>{part.slice(2, -2)}</strong>;
       } else if (/^\s*-/.test(part)) {
         return <span key={i}>{"\u00A0\u00A0\u00A0\u00A0" + part}</span>;
@@ -183,12 +238,7 @@ const SocialMedia = () => {
     setUserInput("");
     setLoading(true);
     const body = {
-      // query: {
-        question: userInput,
-      // },
-      // user_agent: {
-      //   username: " ",
-      // },
+      question: userInput,
     };
     const headers = {
       accept: "application/json",
@@ -197,15 +247,15 @@ const SocialMedia = () => {
 
     try {
       const response = await axios.post(
-        process.env.NEXT_PUBLIC_SOCIAL_MEDIA_INSIGHTS_URL,
+        socialMediaUrl + "chat/",
         body,
         headers
       );
-console.log(response,"response");
+      console.log(response, "response");
 
       const keyPoints = response.data.response.split("\n");
       const parsedSqlResponse = response.data.data_for_graph;
-      const question= response.data.question;
+      const question = response.data.question;
 
       setMessCont((prevState) => [
         ...prevState,
@@ -213,8 +263,8 @@ console.log(response,"response");
           user: "bot",
           message: keyPoints,
           question: question,
-          ...(parsedSqlResponse && { sql_answer: parsedSqlResponse }) // Only add sql_answer if parsedSqlResponse is not null
-        }
+          ...(parsedSqlResponse && { sql_answer: parsedSqlResponse }), // Only add sql_answer if parsedSqlResponse is not null
+        },
       ]);
     } catch (error) {
       // Handle errors
@@ -229,44 +279,34 @@ console.log(response,"response");
     }
   };
   const handleClearChat = async () => {
- 
-   window.location.reload();
-   
     const headers = {
       accept: "application/json",
       "Content-Type": "application/json",
     };
-console.log((process.env.NEXT_URL_TO_TEST_CLEAR_CHAT,"process.env.NEXT_URL_TO_TEST_CLEAR_CHAT"));
 
     try {
       const response = await axios.post(
-        process.env.NEXT_URL_TO_TEST_CLEAR_CHAT || 'http://3.133.108.131:9002/clear_chat/',
-      {},
+        socialMediaUrl + "clear_chat/",
         headers
       );
-console.log(response,"response");
-
-     
+      window.location.reload();
+      console.log(response, "response");
     } catch (error) {
       // Handle errors
-    console.log("error",error);
-    
+      console.log("error", error);
+
       alert(error.response?.data?.detail || "An error occurred");
     } finally {
       // Reset loading state
-    
     }
   };
-
 
   const endpoint = process.env.NEXT_PUBLIC_AZURE_OPENAI_ENDPOINT;
   const apiKey = process.env.NEXT_PUBLIC_AZURE_OPENAI_API_KEY;
   const apiVersion = process.env.NEXT_PUBLIC_API_VERSION;
   const deployment = process.env.NEXT_PUBLIC_DEPLOYMENT;
 
-  const handleOpenAI = async (data,question) => {
-    console.log("data:",data)
-    console.log("Question",question)
+  const handleOpenAI = async (data, question) => {
     const client = new AzureOpenAI({
       endpoint,
       apiKey,
@@ -274,8 +314,6 @@ console.log(response,"response");
       deployment,
       dangerouslyAllowBrowser: true,
     });
-    console.log(client)
-    console.log("chat creating")
 
     const result = await client.chat.completions.create({
       messages: [
@@ -296,12 +334,10 @@ console.log(response,"response");
     });
 
     let answer = "";
-   
-    print("returnin answer")
     for (const choice of result.choices) {
       answer = choice.message.content;
     }
-    console.log("answer",answer)
+    console.log("answer", answer);
     return answer;
   };
 
@@ -312,12 +348,9 @@ console.log(response,"response");
     }
     setDownloadProgress(true);
     try {
-      console.log("data", data);
       const response = await handleOpenAI(data, question);
-      console.log("Processing");
       const formattedResponse = JSON.parse(response);
-      console.log("Formatted response", formattedResponse);
-  
+
       setFormattedJsonData(formattedResponse);
     } catch (error) {
       console.log("Error occurred", error);
@@ -335,7 +368,12 @@ console.log(response,"response");
           <div className="text-lg text-[#001E96] font-inter font-normal">
             Social Media Insights
           </div>
-          <button className="mr-8 bg-[#008CE3] rounded-sm px-2 py-1 text-white" onClick={()=>handleClearChat()}>Clear Conversation</button>
+          <button
+            className="mr-8 bg-[#008CE3] rounded-sm px-2 py-1 text-white"
+            onClick={() => handleClearChat()}
+          >
+            Clear Conversation
+          </button>
         </div>
 
         <div
@@ -380,25 +418,28 @@ console.log(response,"response");
                         : formatTextWithBold(mess.message)}
                     </div>
                   </div>
-                  {mess.sql_answer && detectUrlOrNumber(mess.sql_answer) && (
-      <div className="flex justify-center mt-2">
-        <img
-          src={mess.sql_answer}
-          alt="Graph"
-          className="max-w-[85vh] h-auto rounded-md"
-        />
-      </div>
-    )}
+                  {/* {mess.sql_answer && detectUrlOrNumber(mess.sql_answer) && (
+                    <div className="flex justify-center mt-2">
+                      <img
+                        src={mess.sql_answer}
+                        alt="Graph"
+                        className="max-w-[85vh] h-auto rounded-md"
+                      />
+                    </div>
+                  )} */}
                   {mess.sql_answer !== 0 &&
                     mess.sql_answer !== "" &&
-                    mess.message !== "Error! Please try again" && !detectUrlOrNumber(mess.sql_answer) && (
+                    mess.message !== "Error! Please try again" &&
+                    !detectUrlOrNumber(mess.sql_answer) && (
                       <div className="flex justify-end mr-2 cursor-pointer">
                         {downloadProgress ? (
                           <CircularProgress size={20} />
                         ) : (
                           <CloudDownloadIcon
                             fontSize="small"
-                            onClick={() => handleDownload(mess.sql_answer,mess.question)}
+                            onClick={() =>
+                              handleDownload(mess.sql_answer, mess.question)
+                            }
                           />
                         )}
                       </div>
