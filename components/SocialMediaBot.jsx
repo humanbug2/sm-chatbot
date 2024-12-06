@@ -70,7 +70,10 @@ const SocialMedia = () => {
             Link
           </a>
         );
-      } else if (part.trim() !== "[Link](") {
+      } else if (part.includes("[Link](")) {
+        const cleanedText = part.replace("[Link](", " ");
+        return cleanedText;
+      } else {
         return part;
       }
     });
