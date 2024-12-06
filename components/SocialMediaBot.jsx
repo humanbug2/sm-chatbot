@@ -58,19 +58,21 @@ const SocialMedia = () => {
 
     return parts.map((part, index) => {
       if (urlRegex.test(part)) {
+        const cleanPart = part.replaceAll(")", "").replaceAll("(", "");
         return (
           <a
             key={index}
-            href={part}
+            href={cleanPart}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ textDecoration: "underline" }}
+            style={{ textDecoration: "underline", color: "blue" }}
           >
-            {part}
+            Link
           </a>
         );
+      } else if (part.trim() !== "[Link](") {
+        return part;
       }
-      return part;
     });
   };
 
@@ -125,7 +127,6 @@ const SocialMedia = () => {
       );
     } else {
       const parts = text.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/);
-      console.log(parts);
       return parts
         .filter((part) => part !== "!")
         .map((part, i) => {
@@ -226,7 +227,7 @@ const SocialMedia = () => {
 
   const handleSubmit = async () => {
     if (userInput.trim() === "") {
-      alert("Type a question!");
+      toast.info("Please type a question first");
       return;
     }
 
@@ -272,7 +273,6 @@ const SocialMedia = () => {
         ...prevState,
         { user: "bot", message: ["Error! Please try again"] },
       ]);
-      alert(error.response?.data?.detail || "An error occurred");
     } finally {
       // Reset loading state
       setLoading(false);
@@ -293,9 +293,8 @@ const SocialMedia = () => {
       console.log(response, "response");
     } catch (error) {
       // Handle errors
+      toast.error("Unable to clear the chat history");
       console.log("error", error);
-
-      alert(error.response?.data?.detail || "An error occurred");
     } finally {
       // Reset loading state
     }
@@ -353,6 +352,9 @@ const SocialMedia = () => {
 
       setFormattedJsonData(formattedResponse);
     } catch (error) {
+      toast.error(
+        "Unable to generate excel for the requested message. Please try again later."
+      );
       console.log("Error occurred", error);
     }
     setDownloadProgress(false);
