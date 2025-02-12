@@ -19,6 +19,7 @@ const SocialMedia = () => {
       question: "",
     },
   ]);
+  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
 
   const socialMediaUrl = process.env.NEXT_PUBLIC_SOCIAL_MEDIA_INSIGHTS_URL;
 
@@ -228,56 +229,54 @@ const SocialMedia = () => {
     });
   };
 
-  const handleSubmit = async () => {
-    if (userInput.trim() === "") {
+  const handleSubmit = async (questionText) => {
+    const userMessage = questionText || userInput.trim(); // Use clicked question or input box text
+    if (userMessage === "") {
       toast.info("Please type a question first");
       return;
     }
-
+  
     setMessCont((prevState) => [
       ...prevState,
-      { user: "user", message: userInput, sql_answer: "", question: userInput },
+      { user: "user", message: userMessage, sql_answer: "", question: userMessage },
     ]);
-
+  
     setUserInput("");
     setLoading(true);
     const body = {
-      question: userInput,
+      question: userMessage,
     };
     const headers = {
       accept: "application/json",
       "Content-Type": "application/json",
     };
-
+  
     try {
-      const response = await axios.post(
-        socialMediaUrl + "chat/",
-        body,
-        headers
-      );
+      const response = await axios.post(socialMediaUrl + "chat/", body, headers);
       console.log(response, "response");
-
+  
       const keyPoints = response.data.response.split("\n");
       const parsedSqlResponse = response.data.data_for_graph;
       const question = response.data.question;
-
+      const suggestedQues = response.data.suggested_questions || []; // Extract suggested questions
+  
       setMessCont((prevState) => [
         ...prevState,
         {
           user: "bot",
           message: keyPoints,
           question: question,
-          ...(parsedSqlResponse && { sql_answer: parsedSqlResponse }), // Only add sql_answer if parsedSqlResponse is not null
+          ...(parsedSqlResponse && { sql_answer: parsedSqlResponse }),
         },
       ]);
+  
+      setSuggestedQuestions(suggestedQues); // Update suggested questions
     } catch (error) {
-      // Handle errors
       setMessCont((prevState) => [
         ...prevState,
         { user: "bot", message: ["Error! Please try again"] },
       ]);
     } finally {
-      // Reset loading state
       setLoading(false);
     }
   };
@@ -382,91 +381,71 @@ const SocialMedia = () => {
         </div>
 
         <div
-          className="flex-1 p-4 bg-gray-100 min-h-[83vh] max-h-[83vh] xl:min-h-[85vh] xl:max-h-[85vh] mx-8 overflow-y-scroll scroll-m-4 scroll-bar rounded"
-          ref={chatContainerRef}
-        >
-          {messCont.map((mess, index) => (
-            <div key={index} className="flex items-center">
-              {index === messCont.length - 1 &&
-                mess.user === "user" &&
-                loading && (
-                  <div className="flex justify-start items-center mt-40">
-                    <QuestionAnswerIcon className="text-blue-800 text-3xl mr-2" />
-                    <div className="p-2 my-2 rounded-md bg-blue-50 w-40 flex flex-row gap-1.5">
-                      Thinking
-                      <div className="flex flex-row justify-center items-center pt-2">
-                        <div className="sm-dot"></div>
-                        <div className="sm-dot"></div>
-                        <div className="sm-dot"></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              {mess.user === "bot" && (
-                <div className="flex flex-col">
-                  <div className="flex justify-start items-center overflow-x-auto scroll scroll-m-4 scroll-bar">
-                    <QuestionAnswerIcon className="text-blue-800 text-3xl mr-2" />
-                    <div
-                      className={`p-2 my-2 rounded-md ${
-                        mess.user === "bot"
-                          ? "bg-blue-50 bg-opacity-95"
-                          : "bg-gray-200"
-                      }`}
-                    >
-                      {Array.isArray(mess.message)
-                        ? mess.message.map((point, idx) => (
-                            <div key={idx}>
-                              {formatTextWithBoldAndTable(point)}
-                            </div>
-                          ))
-                        : formatTextWithBold(mess.message)}
-                    </div>
-                  </div>
-                  {/* {mess.sql_answer && detectUrlOrNumber(mess.sql_answer) && (
-                    <div className="flex justify-center mt-2">
-                      <img
-                        src={mess.sql_answer}
-                        alt="Graph"
-                        className="max-w-[85vh] h-auto rounded-md"
-                      />
-                    </div>
-                  )} */}
-                  {mess.sql_answer !== 0 &&
-                    mess.sql_answer !== "" &&
-                    mess.message !== "Error! Please try again" &&
-                    !detectUrlOrNumber(mess.sql_answer) && (
-                      <div className="flex justify-end mr-2 cursor-pointer">
-                        {downloadProgress ? (
-                          <CircularProgress size={20} />
-                        ) : (
-                          <CloudDownloadIcon
-                            fontSize="small"
-                            onClick={() =>
-                              handleDownload(mess.sql_answer, mess.question)
-                            }
-                          />
-                        )}
-                      </div>
-                    )}
-                </div>
-              )}
-
-              {mess.user === "user" && (
-                <div className="flex justify-end items-center ml-auto">
-                  <div
-                    className={`p-2 my-2 ml-auto rounded-md ${
-                      mess.user === "bot" ? "bg-blue-50" : "bg-gray-200"
-                    }`}
-                  >
-                    {mess.message}
-                  </div>
-                  <AccountCircleRoundedIcon className="text-gray-600 text-3xl ml-2" />
-                </div>
-              )}
+  className="flex-1 p-4 bg-gray-100 min-h-[83vh] max-h-[83vh] xl:min-h-[85vh] xl:max-h-[85vh] mx-8 overflow-y-scroll scroll-m-4 scroll-bar rounded"
+  ref={chatContainerRef}
+>
+  {messCont.map((mess, index) => (
+    <div key={index} className="flex flex-col">
+      <div className="flex items-center">
+        {/* Display bot message */}
+        {mess.user === "bot" && (
+          <div className="flex flex-col">
+            <div className="flex justify-start items-center">
+              <QuestionAnswerIcon className="text-blue-800 text-3xl mr-2" />
+              <div className="p-2 my-2 rounded-md bg-blue-50 bg-opacity-95">
+                {Array.isArray(mess.message)
+                  ? mess.message.map((point, idx) => (
+                      <div key={idx}>{formatTextWithBoldAndTable(point)}</div>
+                    ))
+                  : formatTextWithBold(mess.message)}
+              </div>
             </div>
-          ))}
+
+            {/* Suggested Questions (Only after the latest bot message) */}
+            {index === messCont.length - 1 && suggestedQuestions.length > 0 && (
+              <div className="p-3 mt-2 rounded shadow-md">
+                <h3 className="text-gray-600 font-semibold mb-2">Suggested Questions:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {suggestedQuestions.map((question, idx) => (
+                    <button
+                      key={idx}
+                      className="px-4 py-2 bg-blue-200 text-gray-700 rounded hover:bg-blue-200 transition"
+                      onClick={() => handleSubmit(question)}
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Display user message */}
+        {mess.user === "user" && (
+          <div className="flex justify-end items-center ml-auto">
+            <div className="p-2 my-2 rounded-md bg-gray-200">{mess.message}</div>
+            <AccountCircleRoundedIcon className="text-gray-600 text-3xl ml-2" />
+          </div>
+        )}
+      </div>
+    </div>
+  ))}
+   {loading && (
+    <div className="flex justify-start items-center">
+      <QuestionAnswerIcon className="text-blue-800 text-3xl mr-2" />
+      <div className="p-2 my-2 rounded-md bg-blue-50 w-40 flex flex-row gap-1.5">
+        Thinking
+        <div className="flex flex-row justify-center items-center pt-2">
+          <div className="sm-dot"></div>
+          <div className="sm-dot"></div>
+          <div className="sm-dot"></div>
         </div>
+      </div>
+    </div>
+  )}
+</div>
+
 
         {/* Input Section */}
         <div className="flex items-center border-t border-gray-300 p-2 bg-white mx-8">
@@ -499,6 +478,7 @@ const SocialMedia = () => {
         ref={csvLink}
         target="_self"
       />
+   
     </div>
   );
 };
