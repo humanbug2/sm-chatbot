@@ -368,7 +368,7 @@ const SocialMedia = () => {
         <Sidebar />
       </div>
       <div className="flex flex-col" style={{ width: "calc(100% - 16rem)" }}>
-        <div className="flex flex-row items-center gap-5 justify-between  my-4 ml-8">
+        <div className="flex flex-row items-center gap-5 justify-between my-4 ml-8">
           <div className="text-lg text-[#001E96] font-inter font-normal">
             Social Media Insights
           </div>
@@ -379,76 +379,75 @@ const SocialMedia = () => {
             Clear Conversation
           </button>
         </div>
-
+  
         <div
-  className="flex-1 p-4 bg-gray-100 min-h-[83vh] max-h-[83vh] xl:min-h-[85vh] xl:max-h-[85vh] mx-8 overflow-y-scroll scroll-m-4 scroll-bar rounded"
-  ref={chatContainerRef}
->
-  {messCont.map((mess, index) => (
-    <div key={index} className="flex flex-col">
-      <div className="flex items-center">
-        {/* Display bot message */}
-        {mess.user === "bot" && (
-          <div className="flex flex-col">
-            <div className="flex justify-start items-center">
-              <QuestionAnswerIcon className="text-blue-800 text-3xl mr-2" />
-              <div className="p-2 my-2 rounded-md bg-blue-50 bg-opacity-95">
-                {Array.isArray(mess.message)
-                  ? mess.message.map((point, idx) => (
-                      <div key={idx}>{formatTextWithBoldAndTable(point)}</div>
-                    ))
-                  : formatTextWithBold(mess.message)}
+          className="flex-1 p-10 bg-gray-100 min-h-[70vh] max-h-[70vh] xl:min-h-[85vh] xl:max-h-[85vh] mx-8 overflow-y-scroll scroll-m-4 scroll-bar rounded"
+          ref={chatContainerRef}
+        >
+          {messCont.map((mess, index) => (
+            <div key={index} className="flex flex-col">
+              <div className="flex items-center">
+                {/* Display bot message */}
+                {mess.user === "bot" && (
+                  <div className="flex flex-col">
+                    <div className="flex justify-start items-center">
+                      <QuestionAnswerIcon className="text-blue-800 text-3xl mr-2" />
+                      <div className="p-2 my-2 rounded-md bg-blue-50 bg-opacity-95">
+                        {Array.isArray(mess.message)
+                          ? mess.message.map((point, idx) => (
+                              <div key={idx}>{formatTextWithBoldAndTable(point)}</div>
+                            ))
+                          : formatTextWithBold(mess.message)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+  
+                {/* Display user message */}
+                {mess.user === "user" && (
+                  <div className="flex justify-end items-center ml-auto">
+                    <div className="p-2 my-2 rounded-md bg-gray-200">{mess.message}</div>
+                    <AccountCircleRoundedIcon className="text-gray-600 text-3xl ml-2" />
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* Suggested Questions (Only after the latest bot message) */}
-            {index === messCont.length - 1 && suggestedQuestions.length > 0 && (
-              <div className="p-3 mt-2 rounded shadow-md">
-                <h3 className="text-gray-600 font-semibold mb-2">Suggested Questions:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {suggestedQuestions.map((question, idx) => (
-                    <button
-                      key={idx}
-                      className="px-4 py-2 bg-blue-200 text-gray-700 rounded hover:bg-blue-200 transition"
-                      onClick={() => handleSubmit(question)}
-                    >
-                      {question}
-                    </button>
-                  ))}
+          ))}
+          {loading && (
+            <div className="flex justify-start items-center">
+              <QuestionAnswerIcon className="text-blue-800 text-3xl mr-2" />
+              <div className="p-2 my-2 rounded-md bg-blue-50 w-40 flex flex-row gap-1.5">
+                Thinking
+                <div className="flex flex-row justify-center items-center pt-2">
+                  <div className="sm-dot"></div>
+                  <div className="sm-dot"></div>
+                  <div className="sm-dot"></div>
                 </div>
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Display user message */}
-        {mess.user === "user" && (
-          <div className="flex justify-end items-center ml-auto">
-            <div className="p-2 my-2 rounded-md bg-gray-200">{mess.message}</div>
-            <AccountCircleRoundedIcon className="text-gray-600 text-3xl ml-2" />
-          </div>
-        )}
-      </div>
-    </div>
-  ))}
-   {loading && (
-    <div className="flex justify-start items-center">
-      <QuestionAnswerIcon className="text-blue-800 text-3xl mr-2" />
-      <div className="p-2 my-2 rounded-md bg-blue-50 w-40 flex flex-row gap-1.5">
-        Thinking
-        <div className="flex flex-row justify-center items-center pt-2">
-          <div className="sm-dot"></div>
-          <div className="sm-dot"></div>
-          <div className="sm-dot"></div>
+            </div>
+          )}
         </div>
-      </div>
-    </div>
-  )}
-</div>
-
-
+  
+        {/* Suggested Questions - Positioned Above Input Box */}
+        {suggestedQuestions.length > 0 && (
+          <div className="flex items-center border-t border-gray-300 p-2 bg-white mx-8 -mt-10">
+            <div className="flex w-full gap-2 px-4 ">
+              {suggestedQuestions.map((question, idx) => (
+                <button
+                  key={idx}
+                  className="px-4 py-2 bg-blue-200 text-gray-700 rounded hover:bg-blue-300 transition w-full mb-14"
+                  onClick={() => !loading && handleSubmit(question)}
+                  disabled={loading}
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+  
         {/* Input Section */}
-        <div className="flex items-center border-t border-gray-300 p-2 bg-white mx-8">
+        <div className="flex items-center border-t border-gray-300 p-2 bg-white mx-8 -mt-14">
           <input
             className="flex-1 p-2 border border-gray-300 rounded-md"
             placeholder="Type your question here..."
@@ -470,17 +469,18 @@ const SocialMedia = () => {
             />
           )}
         </div>
+  
+        <CSVLink
+          data={formattedJsonData}
+          filename="exportedChat.csv"
+          className="hidden"
+          ref={csvLink}
+          target="_self"
+        />
       </div>
-      <CSVLink
-        data={formattedJsonData}
-        filename="exportedChat.csv"
-        className="hidden"
-        ref={csvLink}
-        target="_self"
-      />
-   
     </div>
   );
+  
 };
 
 export default SocialMedia;
