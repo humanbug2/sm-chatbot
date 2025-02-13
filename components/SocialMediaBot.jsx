@@ -400,6 +400,33 @@ const SocialMedia = () => {
                           : formatTextWithBold(mess.message)}
                       </div>
                     </div>
+
+                    {mess.sql_answer && detectUrlOrNumber(mess.sql_answer) && (
+                    <div className="flex justify-center mt-2">
+                      <img
+                        src={mess.sql_answer}
+                        alt="Graph"
+                        className="max-w-[85vh] h-auto rounded-md"
+                      />
+                    </div>
+                  )} 
+                  {mess.sql_answer !== 0 &&
+                    mess.sql_answer !== "" &&
+                    mess.message !== "Error! Please try again" &&
+                    !detectUrlOrNumber(mess.sql_answer) && (
+                      <div className="flex justify-end mr-2 cursor-pointer">
+                        {downloadProgress ? (
+                          <CircularProgress size={20} />
+                        ) : (
+                          <CloudDownloadIcon
+                            fontSize="small"
+                            onClick={() =>
+                              handleDownload(mess.sql_answer, mess.question)
+                            }
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
   
