@@ -368,7 +368,7 @@ const SocialMedia = () => {
       <div className="">
         <Sidebar />
       </div>
-      <div className="flex flex-col" style={{ width: "calc(100% - 16rem)" }}>
+      <div className="flex flex-col max-h-[95vh] overflow-y-scroll scroll scroll-bar" style={{ width: "calc(100% - 16rem)" }}>
         <div className="flex flex-row items-center gap-5 justify-between  my-4 ml-8">
           <div className="text-lg text-[#001E96] font-inter font-normal">
             Social Media Insights
