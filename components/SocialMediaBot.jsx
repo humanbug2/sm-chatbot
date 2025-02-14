@@ -19,7 +19,6 @@ const SocialMedia = () => {
       question: "",
     },
   ]);
-  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
 
   const socialMediaUrl = process.env.NEXT_PUBLIC_SOCIAL_MEDIA_INSIGHTS_URL;
 
@@ -27,6 +26,8 @@ const SocialMedia = () => {
   const [userInput, setUserInput] = useState("");
   const [formattedJsonData, setFormattedJsonData] = useState("");
   const [downloadProgress, setDownloadProgress] = useState(false);
+  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
+
   const csvLink = useRef();
   const firstUpdate = useRef(true);
 
@@ -368,7 +369,7 @@ const SocialMedia = () => {
         <Sidebar />
       </div>
       <div className="flex flex-col" style={{ width: "calc(100% - 16rem)" }}>
-        <div className="flex flex-row items-center gap-5 justify-between my-4 ml-8">
+        <div className="flex flex-row items-center gap-5 justify-between  my-4 ml-8">
           <div className="text-lg text-[#001E96] font-inter font-normal">
             Social Media Insights
           </div>
@@ -379,29 +380,50 @@ const SocialMedia = () => {
             Clear Conversation
           </button>
         </div>
-  
+
         <div
-          className="flex-1 p-10 bg-gray-100 min-h-[70vh] max-h-[70vh] xl:min-h-[85vh] xl:max-h-[85vh] mx-8 overflow-y-scroll scroll-m-4 scroll-bar rounded"
+          className="flex-1 p-4 bg-gray-100 min-h-[62vh] max-h-[62vh] xl:min-h-[60vh] xl:max-h-[72vh] mx-8 overflow-y-scroll scroll-m-4 scroll-bar rounded mb-0 sm:-mb-4"
           ref={chatContainerRef}
         >
           {messCont.map((mess, index) => (
-            <div key={index} className="flex flex-col">
-              <div className="flex items-center">
-                {/* Display bot message */}
-                {mess.user === "bot" && (
-                  <div className="flex flex-col">
-                    <div className="flex justify-start items-center">
-                      <QuestionAnswerIcon className="text-blue-800 text-3xl mr-2" />
-                      <div className="p-2 my-2 rounded-md bg-blue-50 bg-opacity-95">
-                        {Array.isArray(mess.message)
-                          ? mess.message.map((point, idx) => (
-                              <div key={idx}>{formatTextWithBoldAndTable(point)}</div>
-                            ))
-                          : formatTextWithBold(mess.message)}
+            <div key={index} className="flex items-center">
+              {index === messCont.length - 1 &&
+                mess.user === "user" &&
+                loading && (
+                  <div className="flex justify-start items-center mt-40">
+                    <QuestionAnswerIcon className="text-blue-800 text-3xl mr-2" />
+                    <div className="p-2 my-2 rounded-md bg-blue-50 w-40 flex flex-row gap-1.5">
+                      Thinking
+                      <div className="flex flex-row justify-center items-center pt-2">
+                        <div className="sm-dot"></div>
+                        <div className="sm-dot"></div>
+                        <div className="sm-dot"></div>
                       </div>
                     </div>
+                  </div>
+                )}
 
-                    {mess.sql_answer && detectUrlOrNumber(mess.sql_answer) && (
+              {mess.user === "bot" && (
+                <div className="flex flex-col">
+                  <div className="flex justify-start items-center overflow-x-auto scroll scroll-m-4 scroll-bar">
+                    <QuestionAnswerIcon className="text-blue-800 text-3xl mr-2" />
+                    <div
+                      className={`p-2 my-2 rounded-md ${
+                        mess.user === "bot"
+                          ? "bg-blue-50 bg-opacity-95"
+                          : "bg-gray-200"
+                      }`}
+                    >
+                      {Array.isArray(mess.message)
+                        ? mess.message.map((point, idx) => (
+                            <div key={idx}>
+                              {formatTextWithBoldAndTable(point)}
+                            </div>
+                          ))
+                        : formatTextWithBold(mess.message)}
+                    </div>
+                  </div>
+                  {/* {mess.sql_answer && detectUrlOrNumber(mess.sql_answer) && (
                     <div className="flex justify-center mt-2">
                       <img
                         src={mess.sql_answer}
@@ -409,7 +431,7 @@ const SocialMedia = () => {
                         className="max-w-[85vh] h-auto rounded-md"
                       />
                     </div>
-                  )} 
+                  )} */}
                   {mess.sql_answer !== 0 &&
                     mess.sql_answer !== "" &&
                     mess.message !== "Error! Please try again" &&
@@ -427,42 +449,31 @@ const SocialMedia = () => {
                         )}
                       </div>
                     )}
+                </div>
+              )}
+
+              {mess.user === "user" && (
+                <div className="flex justify-end items-center ml-auto">
+                  <div
+                    className={`p-2 my-2 ml-auto rounded-md ${
+                      mess.user === "bot" ? "bg-blue-50" : "bg-gray-200"
+                    }`}
+                  >
+                    {mess.message}
                   </div>
-                )}
-  
-                {/* Display user message */}
-                {mess.user === "user" && (
-                  <div className="flex justify-end items-center ml-auto">
-                    <div className="p-2 my-2 rounded-md bg-gray-200">{mess.message}</div>
-                    <AccountCircleRoundedIcon className="text-gray-600 text-3xl ml-2" />
-                  </div>
-                )}
-              </div>
+                  <AccountCircleRoundedIcon className="text-gray-600 text-3xl ml-2" />
+                </div>
+              )}
             </div>
           ))}
-          {loading && (
-            <div className="flex justify-start items-center">
-              <QuestionAnswerIcon className="text-blue-800 text-3xl mr-2" />
-              <div className="p-2 my-2 rounded-md bg-blue-50 w-40 flex flex-row gap-1.5">
-                Thinking
-                <div className="flex flex-row justify-center items-center pt-2">
-                  <div className="sm-dot"></div>
-                  <div className="sm-dot"></div>
-                  <div className="sm-dot"></div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
-  
-        {/* Suggested Questions - Positioned Above Input Box */}
         {suggestedQuestions.length > 0 && (
-          <div className="flex items-center border-t border-gray-300 p-2 bg-white mx-8 -mt-10">
+          <div className="flex items-center border-t border-gray-300 p-2 bg-white mx-8">
             <div className="flex w-full gap-2 px-4 ">
               {suggestedQuestions.map((question, idx) => (
                 <button
                   key={idx}
-                  className="px-4 py-2 bg-blue-200 text-gray-700 rounded hover:bg-blue-300 transition w-full mb-14"
+                  className="px-4 py-2 bg-blue-200 text-gray-700 rounded hover:bg-blue-300 transition w-full "
                   onClick={() => !loading && handleSubmit(question)}
                   disabled={loading}
                 >
@@ -474,7 +485,7 @@ const SocialMedia = () => {
         )}
   
         {/* Input Section */}
-        <div className="flex items-center border-t border-gray-300 p-2 bg-white mx-8 -mt-14">
+        <div className="flex items-center border-t border-gray-300 p-2 bg-white mx-8">
           <input
             className="flex-1 p-2 border border-gray-300 rounded-md"
             placeholder="Type your question here..."
@@ -496,18 +507,16 @@ const SocialMedia = () => {
             />
           )}
         </div>
-  
-        <CSVLink
-          data={formattedJsonData}
-          filename="exportedChat.csv"
-          className="hidden"
-          ref={csvLink}
-          target="_self"
-        />
       </div>
+      <CSVLink
+        data={formattedJsonData}
+        filename="exportedChat.csv"
+        className="hidden"
+        ref={csvLink}
+        target="_self"
+      />
     </div>
   );
-  
 };
 
 export default SocialMedia;
